@@ -1,7 +1,6 @@
 package TTT;
 
 import java.util.*;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -20,20 +19,18 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 public class TicTacToe extends Application {
-    VBox vBox;
-    MenuBar menuBar;
-    Menu menu1;
-    Menu menu2;
-    MenuItem newGameMenuItem;
-    MenuItem closeMenuItem;
-    MenuItem aboutMenuItem;
-    Button button00,button01,button02;
-    Button button10,button11,button12;
-    Button button20,button21,button22;
-    Button [][] buttons;
-    GridPane gridPane;
-    Label labelActivePlayer;
-    Board board;
+    private VBox vBox;
+    private MenuBar menuBar;
+    private Menu menu1;
+    private Menu menu2;
+    private MenuItem newGameMenuItem;
+    private MenuItem closeMenuItem;
+    private MenuItem aboutMenuItem;
+    private Button [][] buttons;
+    private GridPane gridPane;
+    private Label labelInfo;
+    private Board board;
+    private int countOfMove;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -47,15 +44,16 @@ public class TicTacToe extends Application {
         aboutMenuItem = new MenuItem("O grze");
         menu2.getItems().addAll(aboutMenuItem);
         menuBar.getMenus().addAll(menu1,menu2);
+        gridPane=new GridPane();
 
-        button00 = new Button("");button01 = new Button("");button02 = new Button("");
-        button10 = new Button("");button11 = new Button("");button12 = new Button("");
-        button20 = new Button("");button21 = new Button("");button22 = new Button("");
+        board = new Board();
+        board.setBoard();
+        countOfMove = board.getSIZE() * board.getSIZE();
 
-
-        buttons = new Button[][]{{button00, button01, button02}, {button10, button11, button12}, {button20, button21, button22}};
+        buttons = new Button[board.getSIZE()][board.getSIZE()];
         for(int i =0; i<buttons.length; i++){
             for(int j=0; j<buttons[i].length; j++){
+                buttons[i][j] = new Button("");
                 buttons[i][j].setMinWidth(Region.USE_COMPUTED_SIZE);
                 buttons[i][j].setMaxWidth(Region.USE_COMPUTED_SIZE);
                 buttons[i][j].setMinHeight(Region.USE_COMPUTED_SIZE);
@@ -64,42 +62,35 @@ public class TicTacToe extends Application {
                 buttons[i][j].setPrefHeight(100);
                 buttons[i][j].setFont(Font.font("Arial", FontWeight.BOLD, 40));
                 buttons[i][j].setTextFill(Color.BLACK);
+                gridPane.addRow(i, buttons[i][j]);
             }
         }
-
-        gridPane=new GridPane();
-        gridPane.addRow(0, button00,button01,button02);
-        gridPane.addRow(1, button10,button11,button12);
-        gridPane.addRow(2, button20,button21,button22);
         gridPane.setPadding(new Insets(20));
-        //gridPane.setGridLinesVisible(true);
         gridPane.setVgap(5);
         gridPane.setHgap(5);
         gridPane.setPrefHeight(Region.USE_COMPUTED_SIZE);
         gridPane.setMaxHeight(Region.USE_COMPUTED_SIZE);
         gridPane.setMinHeight(Region.USE_COMPUTED_SIZE);
 
-        labelActivePlayer = new Label("");
+        labelInfo = new Label("");
 
-        vBox.getChildren().addAll(menuBar,gridPane,labelActivePlayer);
+        vBox.getChildren().addAll(menuBar,gridPane,labelInfo);
 
         Scene scene = new Scene(vBox, 300,320);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Kółko i krzyżyk");
         primaryStage.show();
 
-        labelActivePlayer.setText("Twój ruch");
-        board = new Board();
-        board.setBoard();
+        labelInfo.setText("Twój ruch");
         buttonsAction();
-
 
         newGameMenuItem.addEventHandler(ActionEvent.ACTION, new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                labelActivePlayer.setText("Twój ruch");
+                labelInfo.setText("Twój ruch");
                 board = new Board();
                 board.setBoard();
+                countOfMove = board.getSIZE() * board.getSIZE();
                 buttonsClean();
                 buttonsAction();
             }
@@ -117,34 +108,13 @@ public class TicTacToe extends Application {
 
     }
     private void buttonsAction(){
-
         for(int i = 0; i < buttons.length; i++){
             for(int j = 0; j < buttons[i].length; j++){
                 final int x = i, y = j;
                 buttons[i][j].setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent event) {
-                        int player = board.getActivePlayer();
-                        if(board.playerMove(new Coordy(x, y))){
-
-                            if(player ==1) {
-                                buttons[x][y].setText("X");
-                                buttons[x][y].setDisable(true);
-                                if(board.checkWin(player) == false) {
-                                    labelActivePlayer.setText("Ruch komputera");
-                                    board.setActivePlayer();
-                                } else { buttonsWinner(); }
-                            }
-                            else {
-                                buttons[x][y].setText("O");
-                                buttons[x][y].setDisable(true);
-                                if(board.checkWin(player) == false) {
-                                    labelActivePlayer.setText("Twój ruch");
-                                    board.setActivePlayer();
-                                } else { buttonsWinner(); }
-                            }
-
-                        }
+                        playerAction(x,y);
                     }
                 });
             }
@@ -161,17 +131,50 @@ public class TicTacToe extends Application {
         }
     }
     private void buttonsWinner(){
-        List temp = new ArrayList<>();
-        temp = board.getWinnerList();
+        List temp = board.getWinnerList();
         for(int i =0; i<buttons.length; i++) {
             for (int j = 0; j < buttons[i].length; j++) {
                 buttons[i][j].setDisable(true);
             }
         }
-        for(int i=0; i<temp.size(); i++){
-            Coordy t = (Coordy) temp.get(i);
-            buttons[t.getX()][t.getY()].setTextFill(Color.GREEN);
+       if(temp.isEmpty()){
+            labelInfo.setText("Remis!!!");
+        } else {
+            for(int i=0; i<temp.size(); i++){
+                Coordy t = (Coordy) temp.get(i);
+                buttons[t.getX()][t.getY()].setTextFill(Color.GREEN);
+            }
+            labelInfo.setText("Wygrana!!!");
         }
-        labelActivePlayer.setText("Wygrana!!!");
+    }
+    private void playerAction(int x, int y){
+        if(board.playerMove(new Coordy(x, y))){
+            if(board.getActivePlayer() == board.HUMAN && countOfMove > 0) {
+                buttons[x][y].setText("X");
+                buttons[x][y].setDisable(true);
+                countOfMove--;
+                if (board.checkWin(board.getActivePlayer()) == false && countOfMove >0) {
+                    labelInfo.setText("Ruch komputera");
+                    board.switchActivePlayer();
+                    computerAction();
+                } else {
+                    buttonsWinner();
+                }
+            }
+        }
+    }
+    private void computerAction(){
+        if(board.getActivePlayer() == board.COMPUTER ) {
+            Coordy coordy = board.computerRandomMove();
+
+            buttons[coordy.getX()][coordy.getY()].setText("O");
+            buttons[coordy.getX()][coordy.getY()].setDisable(true);
+            countOfMove--;
+
+            if(board.checkWin(board.getActivePlayer()) == false && countOfMove>0) {
+                labelInfo.setText("Twój ruch");
+                board.switchActivePlayer();
+            } else { buttonsWinner(); }
+        }
     }
 }
