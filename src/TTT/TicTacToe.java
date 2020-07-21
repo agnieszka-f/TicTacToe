@@ -165,7 +165,7 @@ public class TicTacToe extends Application {
     }
     private void computerAction(){
         if(board.getActivePlayer() == board.COMPUTER ) {
-            Coordy coordy = board.computerRandomMove();
+            Coordy coordy = board.computerBlockMove();
 
             buttons[coordy.getX()][coordy.getY()].setText("O");
             buttons[coordy.getX()][coordy.getY()].setDisable(true);
